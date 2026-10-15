@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Mystère & Sortie 🔍</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042); color: #f8fafc; }
+    input, select { font-size: 16px !important; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-6">
+
+  <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-indigo-500/20 text-center relative overflow-hidden">
+    
+    <!-- ========================================== -->
+    <!-- VUE INVITÉ (Enigme / Révélation) -->
+    <!-- ========================================== -->
+    <div id="viewMode" class="hidden">
+      
+      <!-- ÉTAPE 1 : Le Message Verrouillé -->
+      <div id="lockStep">
+        <div class="inline-block bg-indigo-500/10 text-indigo-300 text-xs px-3.5 py-1.5 rounded-full font-semibold mb-4 border border-indigo-500/20 uppercase tracking-widest">
+          ✉️ Message Confidentiel pour <span id="inviteeNameDisplay">...</span>
+        </div>
+        
+        <div class="my-6">
+          <div class="w-24 h-24 mx-auto bg-indigo-600/20 rounded-full flex items-center justify-center border border-indigo-500/30 animate-pulse text-5xl">
+            🔒
+          </div>
+        </div>
+
+        <h1 class="text-2xl font-extrabold text-white mb-2">Tu as reçu une invitation mystère !</h1>
+        <p class="text-xs text-indigo-200/70 mb-8">Appuie sur le bouton ci-dessous pour déverrouiller et découvrir ce qui t'attend.</p>
+
+        <button id="unlockBtn" class="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:opacity-90 transition active:scale-95 text-base">
+          Déverrouiller la surprise ✨
+        </button>
+      </div>
+
+      <!-- ÉTAPE 2 : La Révélation de la Sortie -->
+      <div id="revealStep" class="hidden">
+        <div class="text-5xl mb-3" id="emojiDisplay">🎉</div>
+        <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-indigo-300 mb-1" id="headlineDisplay">Invitation !</h2>
+        <p class="text-xs text-indigo-200/80 mb-6">Proposé avec soin par <span id="senderDisplay" class="font-bold text-white">...</span></p>
+
+        <div class="bg-slate-800/80 p-4 rounded-2xl border border-indigo-500/20 mb-6 text-left text-sm space-y-3 shadow-inner">
+          <p class="flex items-center gap-2">✨ <strong class="text-indigo-300">Activité :</strong> <span id="activityDisplay" class="font-semibold text-white">...</span></p>
+          
+          <div>
+            <a id="mapsLink" href="#" target="_blank" class="flex items-center justify-between bg-slate-700/50 p-3 rounded-xl border border-indigo-500/20 hover:bg-slate-700 transition text-xs">
+              <span class="truncate pr-2">📍 <strong class="text-indigo-300">Lieu :</strong> <span id="locationDisplay" class="text-white">...</span></span>
+              <span class="text-pink-400 font-semibold underline shrink-0">Maps ↗</span>
+            </a>
+          </div>
+
+          <p class="flex items-center gap-2">📅 <strong class="text-indigo-300">Quand :</strong> <span id="datetimeDisplay" class="font-semibold text-white">...</span></p>
+          <p id="noteContainer" class="hidden italic text-xs text-indigo-200/80 pt-2 border-t border-slate-700">💬 <span id="noteDisplay"></span></p>
+        </div>
+
+        <!-- Boutons de Réponse -->
+        <p class="text-xs text-indigo-200/70 mb-3 font-medium">Réponds directement à l'invitation :</p>
+        <div class="space-y-2.5">
+          <a id="whatsappBtn" href="#" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-xs">
+            <span>📲 Accepter sur WhatsApp</span>
+          </a>
+          <a id="smsBtn" href="#" class="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-xs">
+            <span>💬 Accepter par SMS</span>
+          </a>
+          <button id="instaBtn" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-xs">
+            <span>📸 Répondre sur Instagram</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VUE CRÉATEUR (Formulaire de Création) -->
+    <!-- ========================================== -->
+    <div id="createMode">
+      <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400 mb-1">Invitation Mystère 🕵️‍♂️</h1>
+      <p class="text-xs text-indigo-200/70 mb-6">Crée une invitation sous forme de carte secrète à déverrouiller.</p>
+
+      <form id="inviteForm" class="text-left space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-indigo-200">Son prénom / surnom :</label>
+          <input type="text" id="inputInvitee" required placeholder="ex: Laura" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-indigo-200">Ton prénom :</label>
+          <input type="text" id="inputSender" required placeholder="ex: Thomas" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-indigo-200">Type de sortie :</label>
+          <select id="inputCategory" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800 text-white font-medium focus:outline-none focus:border-indigo-400">
+            <option value="🍿|Soirée Cinéma|Prochain arrêt : Le Ciné !">🍿 Cinéma</option>
+            <option value="🍷|Restaurant Gourmand|Une table nous attend !">🍷 Restaurant / Dîner</option>
+            <option value="🍹|Session Cocktails|Santé ! Un verre ensemble ?">🍹 Boire un verre</option>
+            <option value="☕|Pause Café & Pause Douceur|Un café & une bonne discut' ?">☕ Café & Promenade</option>
+            <option value="🎳|Partie de Bowling|Prêt(e) à faire un strike ?">🎳 Bowling / Arcade</option>
+            <option value="✨|Activité Mystère|Un programme spécial pour toi !">✨ Activité sur-mesure</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-indigo-200">Lieu :</label>
+          <input type="text" id="inputLocation" placeholder="ex: Pathé, Café du Centre..." class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+        </div>
+
+        <div class="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
+          <div>
+            <label class="block font-semibold mb-1 text-indigo-200">Date :</label>
+            <input type="date" id="inputDate" required class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-indigo-200">Heure :</label>
+            <input type="time" id="inputTime" required class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-indigo-200">Note ou indice (optionnel) :</label>
+          <input type="text" id="inputNote" placeholder="ex: Tenue décontractée exigée !" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold py-4 rounded-xl shadow-lg transition text-sm mt-4 active:scale-95">
+          Générer l'Invitation Mystère 🚀
+        </button>
+      </form>
+
+      <!-- Résultat avec Lien & QR -->
+      <div id="createdResult" class="hidden mt-6 pt-5 border-t border-indigo-500/20">
+        <p class="text-xs text-emerald-400 font-bold mb-2">✅ Lien prêt à envoyer !</p>
+        <div class="flex items-center gap-2 mb-4">
+          <input type="text" id="generatedUrl" readonly class="w-full p-3 text-xs border border-indigo-500/30 rounded-xl bg-slate-800 text-indigo-200 focus:outline-none">
+          <button id="copyBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl text-xs font-bold shrink-0 active:scale-95">Copier</button>
+        </div>
+        <div class="text-center">
+          <img id="generatedQr" src="" alt="QR Code" class="mx-auto w-32 h-32 p-2 bg-white rounded-2xl mb-2 shadow-lg">
+          <p class="text-[10px] text-indigo-200/60">Envoie ce lien ou fais scanner le QR code.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const invitee = params.get('to');
+    const sender = params.get('from');
+    const activity = params.get('act');
+    const emoji = params.get('emo');
+    const title = params.get('title');
+    const locationParam = params.get('loc');
+    const dateParam = params.get('date');
+    const timeParam = params.get('time');
+    const noteParam = params.get('note');
+
+    if (invitee && sender) {
+      document.getElementById('createMode').classList.add('hidden');
+      document.getElementById('viewMode').classList.remove('hidden');
+
+      document.getElementById('inviteeNameDisplay').innerText = invitee;
+      document.getElementById('senderDisplay').innerText = sender;
+      document.getElementById('emojiDisplay').innerText = emoji || '🎉';
+      document.getElementById('headlineDisplay').innerText = title || 'Invitation !';
+      document.getElementById('activityDisplay').innerText = activity || 'Sortie';
+
+      if(locationParam) {
+        document.getElementById('locationDisplay').innerText = locationParam;
+        document.getElementById('mapsLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationParam)}`;
+      }
+
+      if(dateParam) {
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        const dateObj = new Date(dateParam + 'T00:00:00');
+        const dateFormatted = dateObj.toLocaleDateString('fr-FR', options);
+        document.getElementById('datetimeDisplay').innerText = timeParam ? `${dateFormatted} à ${timeParam}` : dateFormatted;
+      }
+
+      if(noteParam) {
+        document.getElementById('noteContainer').classList.remove('hidden');
+        document.getElementById('noteDisplay').innerText = noteParam;
+      }
+
+      // Animation du déverrouillage
+      document.getElementById('unlockBtn').addEventListener('click', () => {
+        document.getElementById('lockStep').classList.add('hidden');
+        document.getElementById('revealStep').classList.remove('hidden');
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+
+        const confirmMsg = `Coucou ${sender} ! J'ai déverrouillé ton invitation pour "${activity}" et c'est OUI ! 🎉`;
+        const encodedMsg = encodeURIComponent(confirmMsg);
+
+        document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodedMsg}`;
+        document.getElementById('smsBtn').href = `sms:?body=${encodedMsg}`;
+        
+        document.getElementById('instaBtn').addEventListener('click', () => {
+          navigator.clipboard.writeText(confirmMsg).then(() => {
+            alert('📋 Message copié ! Ouvre Instagram pour lui envoyer.');
+            window.location.href = 'instagram://';
+          });
+        });
+      });
+
+    } else {
+      document.getElementById('inviteForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const to = document.getElementById('inputInvitee').value;
+        const from = document.getElementById('inputSender').value;
+        const loc = document.getElementById('inputLocation').value || 'À définir';
+        const date = document.getElementById('inputDate').value;
+        const time = document.getElementById('inputTime').value;
+        const note = document.getElementById('inputNote').value;
+
+        let selected = document.getElementById('inputCategory').value.split('|');
+        let emo = selected[0];
+        let act = selected[1];
+        let headline = selected[2];
+
+        const baseUrl = window.location.href.split('?')[0];
+        let fullUrl = `${baseUrl}?to=${encodeURIComponent(to)}&from=${encodeURIComponent(from)}&act=${encodeURIComponent(act)}&emo=${encodeURIComponent(emo)}&title=${encodeURIComponent(headline)}&loc=${encodeURIComponent(loc)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+        if(note) fullUrl += `&note=${encodeURIComponent(note)}`;
+
+        document.getElementById('generatedUrl').value = fullUrl;
+        document.getElementById('generatedQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullUrl)}`;
+        document.getElementById('createdResult').classList.remove('hidden');
+      });
+
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        const copyText = document.getElementById('generatedUrl');
+        copyText.select();
+        navigator.clipboard.writeText(copyText.value);
+        document.getElementById('copyBtn').innerText = 'Copié !';
+        setTimeout(() => document.getElementById('copyBtn').innerText = 'Copier', 2000);
+      });
+    }
+  </script>
+</body>
+</html>
