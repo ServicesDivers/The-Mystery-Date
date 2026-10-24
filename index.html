@@ -82,7 +82,6 @@
           </button>
         </div>
 
-        <!-- BOUTON POUR LE RECEVEUR -->
         <div class="mt-6 pt-5 border-t border-indigo-500/20">
           <a href="./" class="w-full block bg-gradient-to-r from-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 active:scale-95">
             <span>🕵️‍♂️ Toi aussi, crée ton invitation secrète !</span>
@@ -192,70 +191,93 @@
     const questionParam = params.get('q');
     const answerParam = params.get('a');
 
+    // Identifiant unique basé sur le contenu de l'invitation pour le lien à usage unique
+    const inviteId = "invite_read_" + btoa(encodeURIComponent((invitee || '') + (sender || '') + (dateParam || ''))).replace(/=/g, '');
+
+    // FONCTION DE NORMALISATION INTELLIGENTE DE LA RÉPONSE
+    function cleanString(str) {
+      if (!str) return '';
+      return str
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève les accents
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?'"]/g, "")    // Enlève la ponctuation
+        .replace(/\b(le|la|les|l|un|une|des|du|de)\b/g, "") // Enlève les articles courants
+        .replace(/\s+/g, ' ')                              // Réduit les espaces multiples
+        .trim();
+    }
+
     if (invitee && sender) {
-      document.getElementById('createMode').classList.add('hidden');
-      document.getElementById('viewMode').classList.remove('hidden');
+      // VERIFICATION LIEN DEJÀ UTILISÉ : Redirection immédiate si déjà déverrouillé
+      if (localStorage.getItem(inviteId) === "opened") {
+        window.location.href = window.location.pathname; // Redirige vers le créateur
+      } else {
+        document.getElementById('createMode').classList.add('hidden');
+        document.getElementById('viewMode').classList.remove('hidden');
 
-      document.getElementById('inviteeNameDisplay').innerText = invitee;
-      document.getElementById('senderDisplay').innerText = sender;
-      document.getElementById('emojiDisplay').innerText = emoji || '🎉';
-      document.getElementById('headlineDisplay').innerText = title || 'Invitation !';
-      document.getElementById('activityDisplay').innerText = activity || 'Sortie';
+        document.getElementById('inviteeNameDisplay').innerText = invitee;
+        document.getElementById('senderDisplay').innerText = sender;
+        document.getElementById('emojiDisplay').innerText = emoji || '🎉';
+        document.getElementById('headlineDisplay').innerText = title || 'Invitation !';
+        document.getElementById('activityDisplay').innerText = activity || 'Sortie';
 
-      if(questionParam) {
-        document.getElementById('secretQuestionDisplay').innerText = questionParam;
-      }
-
-      if(locationParam) {
-        document.getElementById('locationDisplay').innerText = locationParam;
-        document.getElementById('mapsLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationParam)}`;
-      }
-
-      if(dateParam) {
-        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        const dateObj = new Date(dateParam + 'T00:00:00');
-        const dateFormatted = dateObj.toLocaleDateString('fr-FR', options);
-        document.getElementById('datetimeDisplay').innerText = timeParam ? `${dateFormatted} à ${timeParam}` : dateFormatted;
-      }
-
-      if(noteParam) {
-        document.getElementById('noteContainer').classList.remove('hidden');
-        document.getElementById('noteDisplay').innerText = noteParam;
-      }
-
-      const unlockBtn = document.getElementById('unlockBtn');
-      const inputAnswer = document.getElementById('inputSecretAnswer');
-      const secretBox = document.getElementById('secretBox');
-      const errorMessage = document.getElementById('errorMessage');
-
-      unlockBtn.addEventListener('click', () => {
-        const userAnswer = inputAnswer.value.trim().toLowerCase();
-        const correctAnswer = (answerParam || '').trim().toLowerCase();
-
-        if (userAnswer === correctAnswer) {
-          document.getElementById('lockStep').classList.add('hidden');
-          document.getElementById('revealStep').classList.remove('hidden');
-          confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-
-          const confirmMsg = `Coucou ${sender} ! J'ai trouvé la bonne réponse ("${inputAnswer.value}") et c'est OUI pour "${activity}" ! 🎉`;
-          const encodedMsg = encodeURIComponent(confirmMsg);
-
-          document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodedMsg}`;
-          document.getElementById('smsBtn').href = `sms:?body=${encodedMsg}`;
-
-          document.getElementById('instaBtn').addEventListener('click', () => {
-            navigator.clipboard.writeText(confirmMsg).then(() => {
-              alert('📋 Message copié ! Ouvre Instagram pour lui envoyer.');
-              window.location.href = 'instagram://';
-            });
-          });
-        } else {
-          secretBox.classList.remove('shake');
-          void secretBox.offsetWidth;
-          secretBox.classList.add('shake');
-          errorMessage.classList.remove('hidden');
+        if(questionParam) {
+          document.getElementById('secretQuestionDisplay').innerText = questionParam;
         }
-      });
+
+        if(locationParam) {
+          document.getElementById('locationDisplay').innerText = locationParam;
+          document.getElementById('mapsLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationParam)}`;
+        }
+
+        if(dateParam) {
+          const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+          const dateObj = new Date(dateParam + 'T00:00:00');
+          const dateFormatted = dateObj.toLocaleDateString('fr-FR', options);
+          document.getElementById('datetimeDisplay').innerText = timeParam ? `${dateFormatted} à ${timeParam}` : dateFormatted;
+        }
+
+        if(noteParam) {
+          document.getElementById('noteContainer').classList.remove('hidden');
+          document.getElementById('noteDisplay').innerText = noteParam;
+        }
+
+        const unlockBtn = document.getElementById('unlockBtn');
+        const inputAnswer = document.getElementById('inputSecretAnswer');
+        const secretBox = document.getElementById('secretBox');
+        const errorMessage = document.getElementById('errorMessage');
+
+        unlockBtn.addEventListener('click', () => {
+          const userAnswerClean = cleanString(inputAnswer.value);
+          const correctAnswerClean = cleanString(answerParam || '');
+
+          if (userAnswerClean.length > 0 && (userAnswerClean === correctAnswerClean || userAnswerClean.includes(correctAnswerClean) || correctAnswerClean.includes(userAnswerClean))) {
+            // MARQUER LE LIEN COMME VU DANS LE NAVIGATEUR
+            localStorage.setItem(inviteId, "opened");
+
+            document.getElementById('lockStep').classList.add('hidden');
+            document.getElementById('revealStep').classList.remove('hidden');
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+
+            const confirmMsg = `Coucou ${sender} ! J'ai trouvé la réponse ("${inputAnswer.value}") et c'est OUI pour "${activity}" ! 🎉`;
+            const encodedMsg = encodeURIComponent(confirmMsg);
+
+            document.getElementById('whatsappBtn').href = `https://wa.me/?text=${encodedMsg}`;
+            document.getElementById('smsBtn').href = `sms:?body=${encodedMsg}`;
+
+            document.getElementById('instaBtn').addEventListener('click', () => {
+              navigator.clipboard.writeText(confirmMsg).then(() => {
+                alert('📋 Message copié ! Ouvre Instagram pour lui envoyer.');
+                window.location.href = 'instagram://';
+              });
+            });
+          } else {
+            secretBox.classList.remove('shake');
+            void secretBox.offsetWidth;
+            secretBox.classList.add('shake');
+            errorMessage.classList.remove('hidden');
+          }
+        });
+      }
 
     } else {
       document.getElementById('inviteForm').addEventListener('submit', (e) => {
