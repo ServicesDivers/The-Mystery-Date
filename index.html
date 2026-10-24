@@ -81,6 +81,13 @@
             <span>📸 Répondre sur Instagram</span>
           </button>
         </div>
+
+        <!-- BOUTON POUR LE RECEVEUR -->
+        <div class="mt-6 pt-5 border-t border-indigo-500/20">
+          <a href="./" class="w-full block bg-gradient-to-r from-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 active:scale-95">
+            <span>🕵️‍♂️ Toi aussi, crée ton invitation secrète !</span>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -150,7 +157,7 @@
         </button>
       </form>
 
-      <!-- RÉSULTAT AVEC BOUTON TÉLÉCHARGER LE QR CODE -->
+      <!-- RÉSULTAT -->
       <div id="createdResult" class="hidden mt-6 pt-5 border-t border-indigo-500/20">
         <p class="text-xs text-emerald-400 font-bold mb-2">✅ Lien prêt à envoyer !</p>
         <div class="flex items-center gap-2 mb-4">
@@ -160,7 +167,6 @@
         <div class="text-center">
           <img id="generatedQr" src="" alt="QR Code" class="mx-auto w-32 h-32 p-2 bg-white rounded-2xl mb-3 shadow-lg">
           
-          <!-- BOUTON DE TÉLÉCHARGEMENT DU QR CODE -->
           <button id="downloadQrBtn" class="w-full bg-slate-800 hover:bg-slate-700 border border-indigo-500/30 text-indigo-200 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95">
             <span>📥 Télécharger l'image du QR Code</span>
           </button>
@@ -287,7 +293,6 @@
         setTimeout(() => document.getElementById('copyBtn').innerText = 'Copier', 2000);
       });
 
-      // LOGIQUE DE TÉLÉCHARGEMENT DU QR CODE
       document.getElementById('downloadQrBtn').addEventListener('click', async () => {
         const qrUrl = document.getElementById('generatedQr').src;
         try {
