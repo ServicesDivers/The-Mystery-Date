@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042); color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.5s ease; -webkit-tap-highlight-color: transparent; }
     input, select { font-size: 16px !important; }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -16,16 +16,22 @@
       40%, 80% { transform: translateX(8px); }
     }
     .shake { animation: shake 0.4s ease-in-out; }
+
+    /* THÈMES DYNAMIQUES */
+    body.theme-friend { background: linear-gradient(135deg, #1e293b, #0f172a, #1e3a8a); color: #f8fafc; }
+    body.theme-flirt { background: linear-gradient(135deg, #311042, #4c1d95, #831843); color: #fdf2f8; }
+    body.theme-love { background: linear-gradient(135deg, #4c0519, #881337, #9f1239); color: #fff1f2; }
+    body.theme-default { background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042); color: #f8fafc; }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-3 sm:p-6">
+<body class="theme-default min-h-screen flex items-center justify-center p-3 sm:p-6">
 
   <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-indigo-500/20 text-center relative overflow-hidden">
     
     <!-- VUE INVITÉ -->
     <div id="viewMode" class="hidden">
       <div id="lockStep">
-        <div class="inline-block bg-indigo-500/10 text-indigo-300 text-xs px-3.5 py-1.5 rounded-full font-semibold mb-4 border border-indigo-500/20 uppercase tracking-widest">
+        <div id="relationBadge" class="inline-block text-xs px-3.5 py-1.5 rounded-full font-semibold mb-4 border uppercase tracking-widest">
           ✉️ Message Confidentiel pour <span id="inviteeNameDisplay">...</span>
         </div>
         
@@ -36,7 +42,7 @@
         </div>
 
         <h1 class="text-xl font-extrabold text-white mb-1">Résous l'énigme pour déverrouiller !</h1>
-        <p class="text-xs text-indigo-200/70 mb-5">Un message secret t'attend, mais tu dois prouver que c'est bien toi.</p>
+        <p class="text-xs text-indigo-200/70 mb-5">Un message secret t'attend, prouve que c'est bien toi.</p>
 
         <div id="secretBox" class="bg-slate-800/80 p-4 rounded-2xl border border-indigo-500/30 text-left mb-5">
           <label class="block text-xs font-semibold text-indigo-300 mb-1.5">❓ Question secrète :</label>
@@ -53,7 +59,7 @@
       <div id="revealStep" class="hidden">
         <div class="text-5xl mb-3" id="emojiDisplay">🎉</div>
         <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-indigo-300 mb-1" id="headlineDisplay">Invitation !</h2>
-        <p class="text-xs text-indigo-200/80 mb-6">Proposé avec soin par <span id="senderDisplay" class="font-bold text-white">...</span></p>
+        <p class="text-xs text-indigo-200/80 mb-6">Proposé par <span id="senderDisplay" class="font-bold text-white">...</span></p>
 
         <div class="bg-slate-800/80 p-4 rounded-2xl border border-indigo-500/20 mb-6 text-left text-sm space-y-3 shadow-inner">
           <p class="flex items-center gap-2">✨ <strong class="text-indigo-300">Activité :</strong> <span id="activityDisplay" class="font-semibold text-white">...</span></p>
@@ -69,7 +75,7 @@
           <p id="noteContainer" class="hidden italic text-xs text-indigo-200/80 pt-2 border-t border-slate-700">💬 <span id="noteDisplay"></span></p>
         </div>
 
-        <p class="text-xs text-indigo-200/70 mb-3 font-medium">Réponds directement à l'invitation :</p>
+        <p class="text-xs text-indigo-200/70 mb-3 font-medium">Réponds à l'invitation :</p>
         <div class="space-y-2.5">
           <a id="whatsappBtn" href="#" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition text-xs">
             <span>📲 Accepter sur WhatsApp</span>
@@ -82,6 +88,7 @@
           </button>
         </div>
 
+        <!-- BOUCLE VIRALE -->
         <div class="mt-6 pt-5 border-t border-indigo-500/20">
           <a href="./" class="w-full block bg-gradient-to-r from-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 active:scale-95">
             <span>🕵️‍♂️ Toi aussi, crée ton invitation secrète !</span>
@@ -97,6 +104,17 @@
       <p class="text-xs text-indigo-200/70 mb-5">Crée ton invitation protégée par une question secrète.</p>
 
       <form id="inviteForm" class="text-left space-y-3.5 text-xs">
+        
+        <!-- SÉLECTION DU LIEN / VIBE -->
+        <div>
+          <label class="block font-semibold mb-1 text-pink-300">👥 Quel est votre lien ?</label>
+          <select id="inputRelation" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800 text-white font-semibold focus:outline-none focus:border-pink-500">
+            <option value="friend">💛 Amie (Amical, fun & mystérieux)</option>
+            <option value="flirt">🔥 Flirt (Piquant & jeu de séduction)</option>
+            <option value="love">❤️ Copine / Amour (Romantique & confidentiel)</option>
+          </select>
+        </div>
+
         <div>
           <label class="block font-semibold mb-1 text-indigo-200">Son prénom / surnom :</label>
           <input type="text" id="inputInvitee" required placeholder="ex: Sarah" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
@@ -126,7 +144,6 @@
             <option value="🍹|Session Cocktails|Santé ! Un verre ensemble ?">🍹 Boire un verre</option>
             <option value="☕|Pause Café & Balade|Un café & une bonne discut' ?">☕ Café & Promenade</option>
             <option value="🎳|Partie de Bowling|Prêt(e) à faire un strike ?">🎳 Bowling / Arcade</option>
-            <option value="✨|Activité Mystère|Un programme spécial pour toi !">✨ Activité sur-mesure</option>
           </select>
         </div>
 
@@ -147,8 +164,20 @@
         </div>
 
         <div>
-          <label class="block font-semibold mb-1 text-indigo-200">Petit mot ou indice (optionnel) :</label>
+          <label class="block font-semibold mb-1 text-indigo-200">Petit mot (optionnel) :</label>
           <input type="text" id="inputNote" placeholder="ex: Je m'occupe de réserver !" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800/80 text-white focus:outline-none focus:border-indigo-400">
+        </div>
+
+        <!-- ENCADRÉ SOUTIEN SOLIDAIRE MOBILE MONEY -->
+        <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl mt-4 text-left">
+          <p class="font-bold text-amber-300 text-xs mb-1 flex items-center gap-1">❤️ Soutenez le projet :</p>
+          <p class="text-[11px] text-indigo-200/80 leading-relaxed mb-2.5">
+            L'outil est 100% gratuit ! Si l'application vous plaît, vous pouvez soutenir la cause en envoyant une contribution (au moins <strong>100 FCFA</strong>) par Mobile Money :
+          </p>
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-amber-500/20 text-[11px] font-semibold space-y-1">
+            <p class="text-yellow-400">📱 <strong>MTN Money :</strong> <span>069130594</span></p>
+            <p class="text-red-400">📱 <strong>Airtel Money :</strong> <span>069130594</span></p>
+          </div>
         </div>
 
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold py-4 rounded-xl shadow-lg transition text-sm mt-4 active:scale-95">
@@ -165,12 +194,9 @@
         </div>
         <div class="text-center">
           <img id="generatedQr" src="" alt="QR Code" class="mx-auto w-32 h-32 p-2 bg-white rounded-2xl mb-3 shadow-lg">
-          
           <button id="downloadQrBtn" class="w-full bg-slate-800 hover:bg-slate-700 border border-indigo-500/30 text-indigo-200 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95">
             <span>📥 Télécharger l'image du QR Code</span>
           </button>
-          
-          <p class="text-[10px] text-indigo-200/60 mt-2">Envoie ce lien ou fais scanner/télécharger le QR code.</p>
         </div>
       </div>
     </div>
@@ -190,29 +216,34 @@
     const noteParam = params.get('note');
     const questionParam = params.get('q');
     const answerParam = params.get('a');
+    const relation = params.get('rel') || 'default';
 
-    // Identifiant unique basé sur le contenu de l'invitation pour le lien à usage unique
-    const inviteId = "invite_read_" + btoa(encodeURIComponent((invitee || '') + (sender || '') + (dateParam || ''))).replace(/=/g, '');
+    const inviteId = "mystere_read_" + btoa(encodeURIComponent((invitee || '') + (sender || '') + (dateParam || ''))).replace(/=/g, '');
 
-    // FONCTION DE NORMALISATION INTELLIGENTE DE LA RÉPONSE
+    const relationStyles = {
+      friend: { bodyClass: 'theme-friend', badgeStyle: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
+      flirt: { bodyClass: 'theme-flirt', badgeStyle: 'bg-purple-500/20 text-pink-300 border-purple-500/30' },
+      love: { bodyClass: 'theme-love', badgeStyle: 'bg-rose-500/20 text-rose-300 border-rose-500/30' },
+      default: { bodyClass: 'theme-default', badgeStyle: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' }
+    };
+
     function cleanString(str) {
       if (!str) return '';
-      return str
-        .toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève les accents
-        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?'"]/g, "")    // Enlève la ponctuation
-        .replace(/\b(le|la|les|l|un|une|des|du|de)\b/g, "") // Enlève les articles courants
-        .replace(/\s+/g, ' ')                              // Réduit les espaces multiples
-        .trim();
+      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?'"]/g, "").replace(/\b(le|la|les|l|un|une|des|du|de)\b/g, "").replace(/\s+/g, ' ').trim();
     }
 
     if (invitee && sender) {
-      // VERIFICATION LIEN DEJÀ UTILISÉ : Redirection immédiate si déjà déverrouillé
       if (localStorage.getItem(inviteId) === "opened") {
-        window.location.href = window.location.pathname; // Redirige vers le créateur
+        window.location.href = window.location.pathname;
       } else {
         document.getElementById('createMode').classList.add('hidden');
         document.getElementById('viewMode').classList.remove('hidden');
+
+        const styleConfig = relationStyles[relation] || relationStyles.default;
+        document.body.className = `${styleConfig.bodyClass} min-h-screen flex items-center justify-center p-3 sm:p-6`;
+
+        const badgeElem = document.getElementById('relationBadge');
+        badgeElem.className = `inline-block text-xs px-3.5 py-1.5 rounded-full font-semibold mb-4 border uppercase tracking-widest ${styleConfig.badgeStyle}`;
 
         document.getElementById('inviteeNameDisplay').innerText = invitee;
         document.getElementById('senderDisplay').innerText = sender;
@@ -220,10 +251,7 @@
         document.getElementById('headlineDisplay').innerText = title || 'Invitation !';
         document.getElementById('activityDisplay').innerText = activity || 'Sortie';
 
-        if(questionParam) {
-          document.getElementById('secretQuestionDisplay').innerText = questionParam;
-        }
-
+        if(questionParam) document.getElementById('secretQuestionDisplay').innerText = questionParam;
         if(locationParam) {
           document.getElementById('locationDisplay').innerText = locationParam;
           document.getElementById('mapsLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationParam)}`;
@@ -251,7 +279,6 @@
           const correctAnswerClean = cleanString(answerParam || '');
 
           if (userAnswerClean.length > 0 && (userAnswerClean === correctAnswerClean || userAnswerClean.includes(correctAnswerClean) || correctAnswerClean.includes(userAnswerClean))) {
-            // MARQUER LE LIEN COMME VU DANS LE NAVIGATEUR
             localStorage.setItem(inviteId, "opened");
 
             document.getElementById('lockStep').classList.add('hidden');
@@ -285,6 +312,7 @@
 
         const to = document.getElementById('inputInvitee').value;
         const from = document.getElementById('inputSender').value;
+        const rel = document.getElementById('inputRelation').value;
         const q = document.getElementById('inputQuestion').value;
         const a = document.getElementById('inputAnswer').value;
         const loc = document.getElementById('inputLocation').value || 'À définir';
@@ -298,7 +326,7 @@
         let headline = selected[2];
 
         const baseUrl = window.location.href.split('?')[0];
-        let fullUrl = `${baseUrl}?to=${encodeURIComponent(to)}&from=${encodeURIComponent(from)}&q=${encodeURIComponent(q)}&a=${encodeURIComponent(a)}&act=${encodeURIComponent(act)}&emo=${encodeURIComponent(emo)}&title=${encodeURIComponent(headline)}&loc=${encodeURIComponent(loc)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+        let fullUrl = `${baseUrl}?to=${encodeURIComponent(to)}&from=${encodeURIComponent(from)}&rel=${encodeURIComponent(rel)}&q=${encodeURIComponent(q)}&a=${encodeURIComponent(a)}&act=${encodeURIComponent(act)}&emo=${encodeURIComponent(emo)}&title=${encodeURIComponent(headline)}&loc=${encodeURIComponent(loc)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
         if(note) fullUrl += `&note=${encodeURIComponent(note)}`;
 
         const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(fullUrl)}`;
