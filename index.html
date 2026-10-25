@@ -40,11 +40,32 @@
       z-index: 99;
       pointer-events: none;
     }
+
+    /* PARTICULES FLOTTANTES */
+    .bg-particle {
+      position: fixed;
+      top: -10vh;
+      font-size: 24px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 0;
+      animation: fall linear infinite;
+      opacity: 0.6;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.7; }
+      90% { opacity: 0.7; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
   </style>
 </head>
-<body class="theme-default min-h-screen flex items-center justify-center p-3 sm:p-6">
+<body class="theme-default min-h-screen flex items-center justify-center p-3 sm:p-6 relative">
 
-  <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-indigo-500/20 text-center relative overflow-hidden">
+  <!-- CONTENEUR DES PARTICULES DE FOND -->
+  <div id="particlesContainer" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+  <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-indigo-500/20 text-center relative z-10 overflow-hidden">
     
     <!-- LOGO DE LA PLATEFORME -->
     <div class="flex items-center justify-center gap-2 mb-4 pb-3 border-b border-white/10">
@@ -112,7 +133,6 @@
           </button>
         </div>
 
-        <!-- BOUCLE VIRALE -->
         <div class="mt-6 pt-5 border-t border-indigo-500/20">
           <a href="./" class="w-full block bg-gradient-to-r from-indigo-500 to-pink-500 hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 active:scale-95">
             <span>🕵️‍♂️ Toi aussi, crée ton invitation secrète !</span>
@@ -133,8 +153,8 @@
           <label class="block font-semibold mb-1 text-pink-300">👥 Quel est votre lien ?</label>
           <select id="inputRelation" class="w-full p-3.5 border border-indigo-500/30 rounded-xl bg-slate-800 text-white font-semibold focus:outline-none focus:border-pink-500">
             <option value="friend">💛 Amie (Amical, fun & mystérieux)</option>
-            <option value="flirt">🔥 Flirt (Piquant & jeu de séduction)</option>
-            <option value="love">❤️ Copine / Amour (Romantique & confidentiel)</option>
+            <option value="flirt">🔥 Flirt (Coquin & jeu de séduction)</option>
+            <option value="love">🍫 Couple / Amour (Cœurs chocolat & confidentiel)</option>
           </select>
         </div>
 
@@ -195,11 +215,11 @@
         <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl mt-4 text-left">
           <p class="font-bold text-amber-300 text-xs mb-1 flex items-center gap-1">❤️ Soutenez le projet :</p>
           <p class="text-[11px] text-indigo-200/80 leading-relaxed mb-2.5">
-            L'outil est 100% gratuit ! Si l'application vous plaît, soutenez la cause avec une contribution (au moins <strong>100 FCFA</strong>) par Mobile Money :
+            L'outil est 100% gratuit ! Soutenez la cause avec une contribution (au moins <strong>100 FCFA</strong>) par Mobile Money :
           </p>
           <div class="bg-slate-900/90 p-3 rounded-xl border border-amber-500/20 text-[11px] font-semibold space-y-1">
             <p class="text-yellow-400">📱 <strong>MTN Money :</strong> <span>069130594</span></p>
-            <p class="text-red-400">📱 <strong>Airtel Money :</strong> <span>053191164</span></p>
+            <p class="text-red-400">📱 <strong>Airtel Money :</strong> <span>069130594</span></p>
           </div>
         </div>
 
@@ -226,10 +246,31 @@
 
   </div>
 
-  <!-- CHAT ANIMÉ QUI SE PROMÈNE -->
+  <!-- CHAT ANIMÉ -->
   <div class="animated-cat">🐈‍⬛</div>
 
   <script>
+    function initParticles(rel) {
+      const container = document.getElementById('particlesContainer');
+      container.innerHTML = '';
+      
+      let emojis = ['✨', '⭐', '💫'];
+      if (rel === 'friend') emojis = ['😂', '🎉', '🍕', '⭐', '🔥'];
+      if (rel === 'flirt') emojis = ['🔥', '😏', '💋', '😈', '👀', '✨'];
+      if (rel === 'love') emojis = ['🍫', '❤️', '🌹', '💖', '🥰', '✨'];
+
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'bg-particle';
+        p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.animationDuration = (8 + Math.random() * 8) + 's';
+        p.style.animationDelay = (Math.random() * 5) + 's';
+        p.style.fontSize = (16 + Math.random() * 16) + 'px';
+        container.appendChild(p);
+      }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const invitee = params.get('to');
     const sender = params.get('from');
@@ -243,6 +284,8 @@
     const questionParam = params.get('q');
     const answerParam = params.get('a');
     const relation = params.get('rel') || 'default';
+
+    initParticles(relation);
 
     const inviteId = "mystere_read_" + btoa(encodeURIComponent((invitee || '') + (sender || '') + (dateParam || ''))).replace(/=/g, '');
 
@@ -266,7 +309,7 @@
         document.getElementById('viewMode').classList.remove('hidden');
 
         const styleConfig = relationStyles[relation] || relationStyles.default;
-        document.body.className = `${styleConfig.bodyClass} min-h-screen flex items-center justify-center p-3 sm:p-6`;
+        document.body.className = `${styleConfig.bodyClass} min-h-screen flex items-center justify-center p-3 sm:p-6 relative`;
 
         const badgeElem = document.getElementById('relationBadge');
         badgeElem.className = `inline-block text-xs px-3.5 py-1.5 rounded-full font-semibold mb-4 border uppercase tracking-widest ${styleConfig.badgeStyle}`;
@@ -286,8 +329,7 @@
         if(dateParam) {
           const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
           const dateObj = new Date(dateParam + 'T00:00:00');
-          const dateFormatted = dateObj.toLocaleDateString('fr-FR', options);
-          document.getElementById('datetimeDisplay').innerText = timeParam ? `${dateFormatted} à ${timeParam}` : dateFormatted;
+          document.getElementById('datetimeDisplay').innerText = timeParam ? `${dateObj.toLocaleDateString('fr-FR', options)} à ${timeParam}` : dateObj.toLocaleDateString('fr-FR', options);
         }
 
         if(noteParam) {
